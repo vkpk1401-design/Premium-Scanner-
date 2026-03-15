@@ -1,0 +1,915 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Premium Scanner — Terminal (Mock)</title>
+  <style>
+    :root{
+      --bg:#070c18;
+      --panel:#0f1830;
+      --panel2:#111f3d;
+      --line:rgba(255,255,255,.10);
+      --text:#e9efff;
+      --muted:#9fb2d8;
+      --gold:#d6b45a;
+      --bull:#2dd4bf;
+      --bear:#fb7185;
+      --chip:rgba(255,255,255,.04);
+      --shadow:0 18px 60px rgba(0,0,0,.40);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial;
+      color:var(--text);
+      background:
+        radial-gradient(900px 420px at 15% 0%, rgba(214,180,90,.18), transparent 55%),
+        radial-gradient(700px 420px at 90% 10%, rgba(45,212,191,.10), transparent 55%),
+        var(--bg);
+    }
+    a{color:var(--gold)}
+    header{
+      position:sticky; top:0; z-index:10;
+      background:rgba(7,12,24,.72);
+      backdrop-filter: blur(10px);
+      border-bottom:1px solid var(--line);
+      padding:12px 14px;
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+    }
+    .brand{display:flex; gap:10px; align-items:center; min-width:0}
+    .logo{
+      width:36px; height:36px; border-radius:12px;
+      border:1px solid rgba(214,180,90,.35);
+      background:linear-gradient(135deg, rgba(214,180,90,.95), rgba(214,180,90,.08));
+      box-shadow:0 10px 30px rgba(214,180,90,.16);
+      flex:0 0 auto;
+    }
+    .title{min-width:0}
+    .title h1{margin:0; font-size:14px; letter-spacing:.2px}
+    .title .sub{margin-top:2px; font-size:12px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+    button{
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.05);
+      color:var(--text);
+      padding:10px 12px;
+      border-radius:12px;
+      font-weight:800;
+      cursor:pointer;
+    }
+    button.primary{
+      border-color:rgba(214,180,90,.55);
+      background:linear-gradient(135deg, rgba(214,180,90,.35), rgba(214,180,90,.10));
+    }
+    button.small{padding:7px 10px; font-weight:800; border-radius:10px; font-size:12px}
+    main{max-width:980px; margin:0 auto; padding:12px 12px 90px}
+    .grid{display:grid; grid-template-columns:1fr; gap:12px}
+    @media(min-width:980px){ .grid{grid-template-columns:1.2fr .8fr} }
+    .card{
+      background:rgba(15,24,48,.92);
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:14px;
+      box-shadow:var(--shadow);
+    }
+    .row{display:flex; flex-wrap:wrap; gap:10px; align-items:center}
+    .between{justify-content:space-between}
+    .divider{height:1px; background:var(--line); margin:12px 0}
+    .muted{color:var(--muted); font-size:12px; line-height:1.5}
+    .pill{
+      font-size:12px;
+      padding:8px 10px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:var(--chip);
+      user-select:none;
+    }
+    .pill.active{
+      border-color:rgba(214,180,90,.45);
+      box-shadow:0 0 0 3px rgba(214,180,90,.12) inset;
+    }
+    .list{display:flex; flex-direction:column; gap:10px}
+    .item{
+      display:flex; justify-content:space-between; gap:10px; align-items:flex-start;
+      padding:12px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.03);
+    }
+    .sym{font-size:14px; font-weight:900}
+    .chips{display:flex; flex-wrap:wrap; gap:8px; margin-top:6px}
+    .chip{
+      font-size:11px;
+      color:var(--muted);
+      border:1px solid var(--line);
+      padding:4px 8px;
+      border-radius:999px;
+      background:rgba(255,255,255,.02);
+    }
+    .tag{
+      font-size:12px; font-weight:900;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      white-space:nowrap;
+      align-self:flex-start;
+    }
+    .bull{background:rgba(45,212,191,.85); border-color:rgba(45,212,191,.45); color:#052015;}
+    .bear{background:rgba(251,113,133,.85); border-color:rgba(251,113,133,.45); color:#2a0710;}
+    .kvs{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+    .kv{padding:10px; border-radius:14px; border:1px solid var(--line); background:rgba(255,255,255,.03)}
+    .kv .k{font-size:11px; color:var(--muted)}
+    .kv .v{font-size:14px; font-weight:900; margin-top:4px}
+    .toast{
+      position:fixed; left:50%; transform:translateX(-50%);
+      bottom:76px; width:min(920px, calc(100% - 24px));
+      border:1px solid var(--line);
+      background:rgba(15,24,48,.94);
+      padding:12px 14px;
+      border-radius:14px;
+      display:none;
+      z-index:20;
+    }
+    .toast.show{display:block}
+    nav{
+      position:fixed; left:0; right:0; bottom:0;
+      background:rgba(7,12,24,.80);
+      backdrop-filter: blur(10px);
+      border-top:1px solid var(--line);
+      display:flex;
+      gap:6px;
+      padding:8px 8px calc(8px + env(safe-area-inset-bottom));
+      z-index:15;
+    }
+    .tab{
+      flex:1;
+      text-align:center;
+      padding:10px 6px;
+      border-radius:14px;
+      border:1px solid transparent;
+      color:var(--muted);
+      font-weight:900;
+      font-size:12px;
+      user-select:none;
+    }
+    .tab.active{
+      color:var(--text);
+      border-color:rgba(214,180,90,.38);
+      background:rgba(214,180,90,.10);
+    }
+    .table{
+      width:100%;
+      border-collapse:collapse;
+      overflow:hidden;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.02);
+    }
+    .table th,.table td{
+      text-align:left;
+      padding:10px 10px;
+      border-bottom:1px solid var(--line);
+      font-size:12px;
+      color:var(--text);
+    }
+    .table th{color:var(--muted); font-size:11px; letter-spacing:.2px}
+    .table tr:last-child td{border-bottom:none}
+    input,select,textarea{
+      width:100%;
+      padding:10px 10px;
+      border-radius:12px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.03);
+      color:var(--text);
+      outline:none;
+      font-size:12px;
+    }
+    textarea{min-height:84px; resize:vertical}
+    .hint{font-size:11px; color:var(--muted); margin-top:6px}
+    canvas{
+      width:100%;
+      height:240px;
+      display:block;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+    }
+  </style>
+</head>
+
+<body>
+<header>
+  <div class="brand">
+    <div class="logo"></div>
+    <div class="title">
+      <h1>Premium Scanner — Terminal (Mock)</h1>
+      <div class="sub" id="subtitle">Guest • Mock data • Tap tabs to navigate</div>
+    </div>
+  </div>
+  <button class="primary" id="btnSound">Test Sound</button>
+</header>
+
+<main>
+  <div id="screen"></div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<nav>
+  <div class="tab active" data-tab="scanner">Scanner</div>
+  <div class="tab" data-tab="chart">Chart</div>
+  <div class="tab" data-tab="options">Options</div>
+  <div class="tab" data-tab="results">Results</div>
+  <div class="tab" data-tab="alerts">Alerts</div>
+</nav>
+
+<script>
+  // ---------- helpers ----------
+  const $ = (s)=>document.querySelector(s);
+  const toast = $("#toast");
+  function showToast(msg){
+    toast.textContent = msg;
+    toast.classList.add("show");
+    setTimeout(()=>toast.classList.remove("show"), 2500);
+  }
+
+  // Sound test
+  function beep(){
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    const ctx = new AudioCtx();
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = "sine";
+    o.frequency.value = 880;
+    g.gain.value = 0.12;
+    o.connect(g); g.connect(ctx.destination);
+    o.start();
+    setTimeout(()=>{ o.stop(); ctx.close(); }, 180);
+  }
+  $("#btnSound").addEventListener("click", ()=>{
+    try{beep(); showToast("Alert sound played");}
+    catch(e){showToast("Sound blocked. Tap again / check volume.");}
+  });
+
+  // ---------- mock state ----------
+  const state = {
+    tab: localStorage.getItem("tab") || "scanner",
+    tf: localStorage.getItem("tf") || "1m",
+    selected: localStorage.getItem("selected") || "RELIANCE",
+    plan: localStorage.getItem("plan") || "Guest",
+    follows: JSON.parse(localStorage.getItem("follows") || "[]"),
+    channels: JSON.parse(localStorage.getItem("channels") || "{\"email\":true,\"sms\":false,\"whatsapp\":false}")
+  };
+
+  function persist(){
+    localStorage.setItem("tab", state.tab);
+    localStorage.setItem("tf", state.tf);
+    localStorage.setItem("selected", state.selected);
+    localStorage.setItem("plan", state.plan);
+    localStorage.setItem("follows", JSON.stringify(state.follows));
+    localStorage.setItem("channels", JSON.stringify(state.channels));
+    $("#subtitle").textContent = `${state.plan} • Mock data • Selected: ${state.selected} • TF: ${state.tf}`;
+  }
+
+  // Breakout data by timeframe
+  const itemsByTf = {
+    "1m": [
+      {sym:"RELIANCE", dir:"bull", reason:["ORB Break","Volume Spike","VWAP Reclaim"]},
+      {sym:"TCS",      dir:"bear", reason:["Support Break","Weak RSI","Supply Zone"]},
+      {sym:"HDFCBANK", dir:"bull", reason:["Trend Burst","Delta +","Price Above VWAP"]},
+    ],
+    "5m": [
+      {sym:"HDFCBANK", dir:"bull", reason:["20D High Break","Trend Strength","Higher High"]},
+      {sym:"INFY",     dir:"bear", reason:["Lower Low","Bear Engulf","Sell Volume"]},
+      {sym:"ICICIBANK",dir:"bull", reason:["Range Break","Momentum","Strong Close"]},
+    ],
+    "15m": [
+      {sym:"ICICIBANK",dir:"bull", reason:["Range Break","OI Build-up","Momentum"]},
+      {sym:"SBIN",     dir:"bear", reason:["Breakdown","Distribution","VWAP Reject"]},
+      {sym:"NIFTY",    dir:"bull", reason:["Market Strength","Breadth +","Breakout"]},
+    ],
+    "1h": [
+      {sym:"NIFTY",    dir:"bull", reason:["Breakout","Market Strength","Breadth +"]},
+      {sym:"BANKNIFTY",dir:"bear", reason:["Breakdown","Risk-Off","Heavy Calls"]},
+      {sym:"TATAMOTORS",dir:"bull", reason:["Trend Up","Continuation","Strong Range"]},
+    ],
+    "1D": [
+      {sym:"TATAMOTORS",dir:"bull", reason:["52W High","Trend Continuation","Strong Close"]},
+      {sym:"ADANIPORTS",dir:"bear", reason:["Gap Down","Resistance Reject","Weak Close"]},
+      {sym:"ITC",      dir:"bull", reason:["Breakout","Volume Support","Structure +"]},
+    ],
+  };
+
+  // ---------- screens ----------
+  const screen = $("#screen");
+
+  function setTab(tab){
+    state.tab = tab;
+    document.querySelectorAll(".tab").forEach(t=>{
+      t.classList.toggle("active", t.dataset.tab === tab);
+    });
+    persist();
+    render();
+  }
+
+  document.querySelectorAll(".tab").forEach(t=>{
+    t.addEventListener("click", ()=> setTab(t.dataset.tab));
+  });
+
+  function renderScanner(){
+    const items = itemsByTf[state.tf] || [];
+    const pills = ["1m","5m","15m","1h","1D"].map(tf=>`
+      <span class="pill ${tf===state.tf?"active":""}" data-tf="${tf}">${tf}</span>
+    `).join("");
+
+    const listHtml = items.map(it=>{
+      const followed = state.follows.includes(it.sym);
+      return `
+        <div class="item" data-sym="${it.sym}">
+          <div style="min-width:0">
+            <div class="sym">${it.sym} <span style="font-size:11px;color:#9fb2d8">• ${state.tf}</span></div>
+            <div class="chips">${it.reason.map(r=>`<span class="chip">${r}</span>`).join("")}</div>
+            <div class="hint">Tap row = open Chart • Follow = save watchlist</div>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:8px; align-items:flex-end">
+            <div class="tag ${it.dir==="bull"?"bull":"bear"}">${it.dir==="bull"?"BULLISH":"BEARISH"}</div>
+            <button class="small" data-follow="${it.sym}">${followed?"Following":"Follow"}</button>
+          </div>
+        </div>
+      `;
+    }).join("");
+
+    screen.innerHTML = `
+      <div class="grid">
+        <section class="card">
+          <div class="row between">
+            <div>
+              <div style="font-weight:900">Breakout Scanner</div>
+              <div class="muted">Bullish = Green • Bearish = Red • Mock terminal flow</div>
+            </div>
+            <button id="btnPro" class="primary">Upgrade (mock)</button>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="row">
+            <span class="muted" style="min-width:92px">Timeframe</span>
+            ${pills}
+            <span class="muted" style="margin-left:auto">Selected: <b>${state.selected}</b></span>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="list" id="scannerList">${listHtml}</div>
+        </section>
+
+        <aside class="card">
+          <div style="font-weight:900">Terminal Status</div>
+          <div class="muted">This simulates the full app flow without real broker/data APIs.</div>
+          <div class="divider"></div>
+
+          <div class="kvs">
+            <div class="kv"><div class="k">Plan</div><div class="v">${state.plan}</div></div>
+            <div class="kv"><div class="k">Watchlist</div><div class="v">${state.follows.length}</div></div>
+          </div>
+
+          <div class="divider"></div>
+
+          <button id="btnGoChart" style="width:100%">Open Chart</button>
+          <button id="btnGoOptions" style="width:100%; margin-top:10px">Open Options</button>
+          <button id="btnGoResults" style="width:100%; margin-top:10px">Open Results</button>
+
+          <div class="divider"></div>
+          <div class="muted">
+            Next step (real app): connect live market data + subscription + notifications.
+          </div>
+        </aside>
+      </div>
+    `;
+
+    // events
+    document.querySelectorAll(".pill[data-tf]").forEach(p=>{
+      p.addEventListener("click", ()=>{
+        state.tf = p.dataset.tf;
+        persist();
+        render();
+        showToast(`Timeframe: ${state.tf}`);
+      });
+    });
+
+    $("#btnPro").addEventListener("click", ()=>{
+      state.plan = (state.plan === "Guest") ? "Pro (mock)" : "Guest";
+      persist();
+      render();
+      showToast(`Plan: ${state.plan}`);
+    });
+
+    $("#btnGoChart").addEventListener("click", ()=> setTab("chart"));
+    $("#btnGoOptions").addEventListener("click", ()=> setTab("options"));
+    $("#btnGoResults").addEventListener("click", ()=> setTab("results"));
+
+    document.querySelectorAll(".item[data-sym]").forEach(row=>{
+      row.addEventListener("click", (e)=>{
+        // if you clicked the Follow button, don't trigger row open
+        if(e.target && e.target.dataset && e.target.dataset.follow) return;
+        state.selected = row.dataset.sym;
+        persist();
+        setTab("chart");
+      });
+    });
+
+    document.querySelectorAll("button[data-follow]").forEach(b=>{
+      b.addEventListener("click", (e)=>{
+        e.stopPropagation();
+        const sym = b.dataset.follow;
+        const i = state.follows.indexOf(sym);
+        if(i>=0) state.follows.splice(i,1);
+        else state.follows.push(sym);
+        persist();
+        render();
+        showToast(i>=0 ? `Unfollowed ${sym}` : `Followed ${sym}`);
+      });
+    });
+  }
+
+  // Generate deterministic candles
+  function makeCandles(sym, tf){
+    let n = 48;
+    let seed = (sym.length * 997) + (tf.length * 101);
+    function rnd(){ seed = (seed * 9301 + 49297) % 233280; return seed / 233280; }
+
+    let price = 100 + (sym.charCodeAt(0) % 50);
+    const out = [];
+    for(let i=0;i<n;i++){
+      const drift = (rnd()-0.48) * 2.2;
+      const vol = 1.2 + rnd()*2.2;
+      const o = price;
+      const c = Math.max(10, o + drift);
+      const hi = Math.max(o,c) + rnd()*vol;
+      const lo = Math.min(o,c) - rnd()*vol;
+      out.push({o,c,h:hi,l:lo});
+      price = c;
+    }
+    return out;
+  }
+
+  function drawCandles(canvas, candles){
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = Math.floor(rect.width * dpr);
+    canvas.height = Math.floor(rect.height * dpr);
+    const ctx = canvas.getContext("2d");
+    ctx.scale(dpr,dpr);
+
+    const w = rect.width, h = rect.height;
+    ctx.clearRect(0,0,w,h);
+
+    // background grid
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = "rgba(255,255,255,0.06)";
+    for(let i=0;i<6;i++){
+      const y = (h/6)*i;
+      ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke();
+    }
+
+    let min = Infinity, max=-Infinity;
+    candles.forEach(c=>{ min = Math.min(min,c.l); max=Math.max(max,c.h); });
+    const pad = (max-min)*0.08;
+    min -= pad; max += pad;
+
+    const px = (v)=> (h - 12) - ((v-min)/(max-min))*(h-24);
+
+    const cw = w / candles.length;
+    for(let i=0;i<candles.length;i++){
+      const c = candles[i];
+      const x = i*cw + cw*0.15;
+      const bodyW = Math.max(3, cw*0.6);
+      const yO = px(c.o), yC = px(c.c), yH = px(c.h), yL = px(c.l);
+
+      const up = c.c >= c.o;
+      const col = up ? "rgba(45,212,191,0.95)" : "rgba(251,113,133,0.95)";
+      ctx.strokeStyle = col;
+      ctx.fillStyle = col;
+
+      // wick
+      ctx.beginPath();
+      ctx.moveTo(x+bodyW/2, yH);
+      ctx.lineTo(x+bodyW/2, yL);
+      ctx.stroke();
+
+      // body
+      const top = Math.min(yO,yC);
+      const bot = Math.max(yO,yC);
+      const bh = Math.max(2, bot-top);
+      ctx.globalAlpha = 0.85;
+      ctx.fillRect(x, top, bodyW, bh);
+      ctx.globalAlpha = 1;
+    }
+
+    // border overlay
+    ctx.strokeStyle = "rgba(214,180,90,0.14)";
+    ctx.strokeRect(0.5,0.5,w-1,h-1);
+  }
+
+  function renderChart(){
+    const candles = makeCandles(state.selected, state.tf);
+    const last = candles[candles.length-1];
+    const chg = (last.c - last.o);
+    const dir = chg >= 0 ? "bull" : "bear";
+
+    screen.innerHTML = `
+      <div class="grid">
+        <section class="card">
+          <div class="row between">
+            <div>
+              <div style="font-weight:900">${state.selected} — Chart</div>
+              <div class="muted">Candlestick chart (mock) • ${state.tf} • Tap Scanner to change symbol</div>
+            </div>
+            <div class="tag ${dir}">${dir==="bull"?"BULLISH":"BEARISH"}</div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="row">
+            <span class="muted" style="min-width:92px">Timeframe</span>
+            ${["1m","5m","15m","1h","1D"].map(tf=>`<span class="pill ${tf===state.tf?"active":""}" data-tf="${tf}">${tf}</span>`).join("")}
+            <button class="small" id="btnToScanner" style="margin-left:auto">Back to Scanner</button>
+          </div>
+
+          <div class="divider"></div>
+
+          <canvas id="candle"></canvas>
+
+          <div class="divider"></div>
+
+          <div class="kvs">
+            <div class="kv"><div class="k">Open</div><div class="v">${last.o.toFixed(2)}</div></div>
+            <div class="kv"><div class="k">Close</div><div class="v">${last.c.toFixed(2)}</div></div>
+            <div class="kv"><div class="k">High</div><div class="v">${last.h.toFixed(2)}</div></div>
+            <div class="kv"><div class="k">Low</div><div class="v">${last.l.toFixed(2)}</div></div>
+          </div>
+        </section>
+
+        <aside class="card">
+          <div style="font-weight:900">Actions</div>
+          <div class="muted">Simulate terminal actions (mock)</div>
+          <div class="divider"></div>
+
+          <button id="btnFollowNow" style="width:100%">${state.follows.includes(state.selected) ? "Unfollow" : "Follow"}</button>
+          <button id="btnGoOptions" style="width:100%; margin-top:10px">Options Chain</button>
+          <button id="btnAlertMe" class="primary" style="width:100%; margin-top:10px">Trigger Alert (mock)</button>
+
+          <div class="divider"></div>
+          <div class="muted">
+            Real charting later: live candles + indicators + drawing tools.
+          </div>
+        </aside>
+      </div>
+    `;
+
+    document.querySelectorAll(".pill[data-tf]").forEach(p=>{
+      p.addEventListener("click", ()=>{
+        state.tf = p.dataset.tf;
+        persist();
+        render();
+        showToast(`Timeframe: ${state.tf}`);
+      });
+    });
+
+    $("#btnToScanner").addEventListener("click", ()=> setTab("scanner"));
+    $("#btnGoOptions").addEventListener("click", ()=> setTab("options"));
+
+    $("#btnFollowNow").addEventListener("click", ()=>{
+      const sym = state.selected;
+      const i = state.follows.indexOf(sym);
+      if(i>=0) state.follows.splice(i,1);
+      else state.follows.push(sym);
+      persist();
+      render();
+      showToast(i>=0 ? `Unfollowed ${sym}` : `Followed ${sym}`);
+    });
+
+    $("#btnAlertMe").addEventListener("click", ()=>{
+      const ch = state.channels;
+      showToast(`Alert queued → Email:${ch.email?"ON":"OFF"} SMS:${ch.sms?"ON":"OFF"} WA:${ch.whatsapp?"ON":"OFF"}`);
+      // this click counts as user interaction, so sound is allowed
+      try{beep();}catch(e){}
+    });
+
+    // Draw chart after DOM paint
+    setTimeout(()=>{
+      const c = $("#candle");
+      drawCandles(c, candles);
+      window.addEventListener("resize", ()=> drawCandles(c, candles), {passive:true});
+    }, 50);
+  }
+
+  function renderOptions(){
+    const strikes = [90,95,100,105,110,115,120].map(s=>{
+      const ceOI = Math.floor(500 + (s*13)%700);
+      const peOI = Math.floor(520 + (s*17)%650);
+      const ceIV = (12 + (s%7)*2.2).toFixed(1);
+      const peIV = (13 + (s%6)*2.0).toFixed(1);
+      return {s, ceOI, peOI, ceIV, peIV};
+    });
+
+    screen.innerHTML = `
+      <div class="grid">
+        <section class="card">
+          <div class="row between">
+            <div>
+              <div style="font-weight:900">${state.selected} — Options (Mock)</div>
+              <div class="muted">Most-active strike + spreads (UI test)</div>
+            </div>
+            <button class="small" id="btnToChart">Back to Chart</button>
+          </div>
+
+          <div class="divider"></div>
+
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Strike</th><th>CE OI</th><th>CE IV%</th><th>PE OI</th><th>PE IV%</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${strikes.map(r=>`
+                <tr>
+                  <td><b>${r.s}</b></td>
+                  <td>${r.ceOI}</td>
+                  <td>${r.ceIV}</td>
+                  <td>${r.peOI}</td>
+                  <td>${r.peIV}</td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+
+          <div class="divider"></div>
+
+          <div style="font-weight:900">Spread Strategy Builder (Mock)</div>
+          <div class="muted">Select a spread, it will show legs (UI-only).</div>
+
+          <div class="divider"></div>
+
+          <div class="row">
+            <div style="flex:1; min-width:220px">
+              <label class="muted">Strategy</label>
+              <select id="spread">
+                <option value="bull_call">Bull Call Spread</option>
+                <option value="bear_put">Bear Put Spread</option>
+                <option value="iron_condor">Iron Condor</option>
+                <option value="straddle">Straddle</option>
+              </select>
+            </div>
+            <div style="flex:1; min-width:220px">
+              <label class="muted">Expiry</label>
+              <select id="expiry">
+                <option>This Week</option><option>Next Week</option><option>Monthly</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="card" style="background:rgba(255,255,255,.02)">
+            <div style="font-weight:900">Legs</div>
+            <div class="muted" id="legs">—</div>
+          </div>
+        </section>
+
+        <aside class="card">
+          <div style="font-weight:900">One-tap checks</div>
+          <div class="muted">This confirms your Options screen flow.</div>
+          <div class="divider"></div>
+
+          <button id="btnMockTrade" class="primary" style="width:100%">Place Paper Trade (mock)</button>
+          <button id="btnAlerts" style="width:100%; margin-top:10px">Alert Settings</button>
+
+          <div class="divider"></div>
+          <div class="muted">Real options later: live chain + greeks + payoff chart.</div>
+        </aside>
+      </div>
+    `;
+
+    $("#btnToChart").addEventListener("click", ()=> setTab("chart"));
+    $("#btnAlerts").addEventListener("click", ()=> setTab("alerts"));
+
+    function updateLegs(){
+      const s = $("#spread").value;
+      let text = "";
+      if(s==="bull_call") text = "Buy ATM Call + Sell OTM Call (limited risk / limited reward).";
+      if(s==="bear_put") text = "Buy ATM Put + Sell OTM Put (limited risk / limited reward).";
+      if(s==="iron_condor") text = "Sell OTM Call + Buy further OTM Call + Sell OTM Put + Buy further OTM Put.";
+      if(s==="straddle") text = "Buy ATM Call + Buy ATM Put (volatility bet).";
+      $("#legs").textContent = text;
+    }
+    $("#spread").addEventListener("change", updateLegs);
+    updateLegs();
+
+    $("#btnMockTrade").addEventListener("click", ()=>{
+      showToast("Paper trade placed (mock).");
+      try{beep();}catch(e){}
+    });
+  }
+
+  function renderResults(){
+    const rows = [
+      {q:"Q4", rev:"₹12,340 Cr", prof:"₹1,210 Cr", eps:"18.4", yoy:"+12%"},
+      {q:"Q3", rev:"₹11,980 Cr", prof:"₹1,090 Cr", eps:"16.8", yoy:"+9%"},
+      {q:"Q2", rev:"₹11,450 Cr", prof:"₹980 Cr",  eps:"15.1", yoy:"+6%"},
+      {q:"Q1", rev:"₹10,990 Cr", prof:"₹920 Cr",  eps:"14.2", yoy:"+5%"},
+    ];
+
+    screen.innerHTML = `
+      <div class="grid">
+        <section class="card">
+          <div class="row between">
+            <div>
+              <div style="font-weight:900">${state.selected} — Quarterly Results (Mock)</div>
+              <div class="muted">Table + “calendar” placeholder for terminal testing</div>
+            </div>
+            <button class="small" id="btnToScanner">Back to Scanner</button>
+          </div>
+
+          <div class="divider"></div>
+
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Quarter</th><th>Revenue</th><th>Profit</th><th>EPS</th><th>YoY</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows.map(r=>`
+                <tr>
+                  <td><b>${r.q}</b></td>
+                  <td>${r.rev}</td>
+                  <td>${r.prof}</td>
+                  <td>${r.eps}</td>
+                  <td>${r.yoy}</td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+
+          <div class="divider"></div>
+          <div class="card" style="background:rgba(255,255,255,.02)">
+            <div style="font-weight:900">Earnings Calendar (placeholder)</div>
+            <div class="muted">In the real app this will show upcoming events + reminders.</div>
+          </div>
+        </section>
+
+        <aside class="card">
+          <div style="font-weight:900">Terminal Checks</div>
+          <div class="divider"></div>
+          <div class="muted">
+            If this screen works, your multi-page terminal flow is good.
+            Next: connect to real financial data.
+          </div>
+        </aside>
+      </div>
+    `;
+
+    $("#btnToScanner").addEventListener("click", ()=> setTab("scanner"));
+  }
+
+  function renderAlerts(){
+    screen.innerHTML = `
+      <div class="grid">
+        <section class="card">
+          <div class="row between">
+            <div>
+              <div style="font-weight:900">Alerts + Custom Indicator (Mock)</div>
+              <div class="muted">This is where Email/SMS/WhatsApp logic will be connected later.</div>
+            </div>
+            <button class="small" id="btnTrigger">Trigger Alert</button>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="row">
+            <div class="kv" style="flex:1; min-width:220px">
+              <div class="k">Email</div>
+              <div class="row" style="margin-top:6px">
+                <button class="small" id="email">${state.channels.email ? "ON" : "OFF"}</button>
+                <span class="muted">Customer email (mock)</span>
+              </div>
+            </div>
+            <div class="kv" style="flex:1; min-width:220px">
+              <div class="k">SMS</div>
+              <div class="row" style="margin-top:6px">
+                <button class="small" id="sms">${state.channels.sms ? "ON" : "OFF"}</button>
+                <span class="muted">Customer SMS (mock)</span>
+              </div>
+            </div>
+            <div class="kv" style="flex:1; min-width:220px">
+              <div class="k">WhatsApp</div>
+              <div class="row" style="margin-top:6px">
+                <button class="small" id="whatsapp">${state.channels.whatsapp ? "ON" : "OFF"}</button>
+                <span class="muted">Customer WhatsApp (mock)</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div style="font-weight:900">Request Custom Indicator (Mock ticket)</div>
+          <div class="muted">This simulates “mutual consent” request flow.</div>
+
+          <div class="divider"></div>
+
+          <div class="row">
+            <div style="flex:1; min-width:220px">
+              <label class="muted">Market</label>
+              <select id="market">
+                <option>NSE (India)</option>
+                <option>US Stocks</option>
+                <option>Crypto</option>
+              </select>
+            </div>
+            <div style="flex:1; min-width:220px">
+              <label class="muted">Timeframe</label>
+              <select id="itf">
+                <option>1m</option><option>5m</option><option>15m</option><option>1h</option><option>1D</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <label class="muted">Indicator requirements</label>
+          <textarea id="req" placeholder="Example: Buy when price breaks ORB high + volume spike, exit at VWAP or 1:2 RR..."></textarea>
+          <div class="hint">This is stored locally for now (mock). In real app it will go to your server/ticket system.</div>
+
+          <div class="divider"></div>
+          <button class="primary" id="submit" style="width:100%">Submit Request (mock)</button>
+
+          <div class="divider"></div>
+          <div class="card" style="background:rgba(255,255,255,.02)">
+            <div style="font-weight:900">Last Request</div>
+            <div class="muted" id="last">None</div>
+          </div>
+        </section>
+
+        <aside class="card">
+          <div style="font-weight:900">Next Step (real app)</div>
+          <div class="divider"></div>
+          <div class="muted">
+            Real notifications require provider keys + backend (SendGrid/Twilio/Meta WhatsApp).
+            In browser, sound plays only after user interaction.
+          </div>
+        </aside>
+      </div>
+    `;
+
+    function toggleChannel(k){
+      state.channels[k] = !state.channels[k];
+      persist();
+      render();
+      showToast(`${k.toUpperCase()} ${state.channels[k] ? "ON" : "OFF"}`);
+    }
+
+    $("#email").addEventListener("click", ()=>toggleChannel("email"));
+    $("#sms").addEventListener("click", ()=>toggleChannel("sms"));
+    $("#whatsapp").addEventListener("click", ()=>toggleChannel("whatsapp"));
+
+    $("#btnTrigger").addEventListener("click", ()=>{
+      showToast(`Alert fired for ${state.selected} (${state.tf})`);
+      try{beep();}catch(e){}
+    });
+
+    const last = localStorage.getItem("last_indicator_request") || "";
+    $("#last").textContent = last || "None";
+
+    $("#submit").addEventListener("click", ()=>{
+      const market = $("#market").value;
+      const itf = $("#itf").value;
+      const req = $("#req").value.trim();
+      if(!req){
+        showToast("Please enter indicator requirements.");
+        return;
+      }
+      const ticket = `Submitted • ${market} • TF ${itf} • ${new Date().toLocaleString()}\n${req}`;
+      localStorage.setItem("last_indicator_request", ticket);
+      $("#last").textContent = ticket;
+      $("#req").value = "";
+      showToast("Custom Indicator Request: Submitted (mock)");
+      try{beep();}catch(e){}
+    });
+  }
+
+  function render(){
+    if(state.tab === "scanner") renderScanner();
+    if(state.tab === "chart") renderChart();
+    if(state.tab === "options") renderOptions();
+    if(state.tab === "results") renderResults();
+    if(state.tab === "alerts") renderAlerts();
+  }
+
+  // init
+  persist();
+  setTab(state.tab);
+</script>
+</body>
+</html>
